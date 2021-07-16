@@ -49,7 +49,7 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
     HANDLE hDevice = CreateFile(szVolumeName.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
     {
-        // std::wcout << "CreateFile() Failed: " << GetLastError() << std::endl;
+        // std::wcout << "[A] CreateFile() Failed: " << GetLastError() << std::endl;
         CloseHandle(hDevice);
         return diskNumbers;
     }
@@ -63,7 +63,7 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         int nError = GetLastError();
         if (nError != ERROR_MORE_DATA)
         {
-            // std::wcout << "DeviceIoControl() Failed: " << nError << std::endl;
+            // std::wcout << "[A] DeviceIoControl() Failed: " << nError << std::endl;
             CloseHandle(hDevice);
             return diskNumbers;
         }
@@ -75,7 +75,7 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
         {
             nError = GetLastError();
-            // std::wcout << "DeviceIoControl() Failed: " << nError << std::endl;
+            // std::wcout << "[A] DeviceIoControl() Failed: " << nError << std::endl;
             CloseHandle(hDevice);
             return diskNumbers;
         }
@@ -112,7 +112,7 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
     HANDLE hDevice = CreateFile(diskPath.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
     {
-        // std::wcout << "CreateFile() Failed: " << GetLastError() << std::endl;
+        // std::wcout << "[B] CreateFile() Failed: " << GetLastError() << std::endl;
         CloseHandle(hDevice);
         return partitions;
     }
@@ -126,7 +126,7 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
         int nError = GetLastError();
         if (nError != ERROR_INSUFFICIENT_BUFFER)
         {
-            // std::wcout << "1- DeviceIoControl() Failed: " << nError << std::endl;
+            // std::wcout << "[B] DeviceIoControl() Failed: " << nError << std::endl;
             CloseHandle(hDevice);
             return partitions;
         }
@@ -138,7 +138,7 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
         if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
         {
             nError = GetLastError();
-            // std::wcout << "2- DeviceIoControl() Failed: " << nError << std::endl;
+            // std::wcout << "[B] DeviceIoControl() Failed: " << nError << std::endl;
             CloseHandle(hDevice);
             return partitions;
         }
@@ -162,4 +162,21 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
     CloseHandle(hDevice);
 
     return partitions;
+}
+
+std::wstring WinDisk::GUIDToWstring(const GUID& guid)
+{
+    wchar_t* guidString;
+    HRESULT result = StringFromCLSID(guid, &guidString);
+
+    if (result == E_OUTOFMEMORY)
+    {
+        CoTaskMemFree(guidString);
+        return std::wstring();
+    }
+    
+    std::wstring temp(guidString);
+    CoTaskMemFree(guidString);
+
+    return temp;    
 }

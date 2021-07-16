@@ -16,43 +16,49 @@ int main()
     for (auto& drive : WinDisk::GetValidDrives())
     {
         std::wcout << std::endl;
+        std::wcout << "=======================" << std::endl;
         std::wcout << L"Drive: " << drive << std::endl;
 
         std::wstring vGuid = WinDisk::GetVolumeGuid(drive);
         std::wcout << L"GUID: " << vGuid << std::endl;
         
-        std::cout << "Disk Numbers: ";
+        std::wcout << "Disk Numbers: ";
         for (auto& nb : WinDisk::GetDiskNumbers(vGuid))
         {
-            std::cout << nb << std::endl;
+            std::wcout << nb << std::endl;
             
-            for (auto& part : WinDisk::GetPartList(nb))
+            auto part = WinDisk::GetPartList(nb);
+
+            for (size_t i{ 0 }; i < part.size(); i++)
             {
-                switch (part.PartitionStyle)
+                std::wcout << "=======================" << std::endl;
+                std::wcout << "Partition " << (i + 1) << ':' << std::endl;
+
+                switch (part.at(i).PartitionStyle)
                 {
                 case PARTITION_STYLE_MBR:
                 {
-                    std::wcout << "MBR Partition ..." << std::endl;
+                    std::wcout << "Style: MBR" << std::endl;
                     break;
                 }
                 case PARTITION_STYLE_GPT:
                 {
-                    std::wcout << "GPT Partition ..." << std::endl;
-                    wchar_t* guidString;
-                    StringFromCLSID(part.Gpt.PartitionType, &guidString);
-                    std::wcout << L"Type: " << guidString << std::endl;
-                    CoTaskMemFree(guidString);
+                    std::wcout << "Style: GPT" << std::endl;
+                    std::wcout << L"Type: " << WinDisk::GUIDToWstring(part.at(i).Gpt.PartitionType) << std::endl;
                     break;
                 }
                 case PARTITION_STYLE_RAW:
-                    std::wcout << "RAW Partition ..." << std::endl;
+                {
+                    std::wcout << "Style: RAW (Partition not formatted in either of the recognized formats—MBR or GPT)" << std::endl;
                     break;
+                }
                 default:
                     std::wcout << "Invalid Partition ..." << std::endl;
                 }
             }
+
         }
-        std::cout << std::endl;
+        std::wcout << std::endl;
     }
 
     return EXIT_SUCCESS;
