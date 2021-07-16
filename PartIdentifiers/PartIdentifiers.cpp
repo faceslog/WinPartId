@@ -5,6 +5,8 @@
 // https://docs.microsoft.com/en-us/windows/win32/fileio/basic-and-dynamic-disks?redirectedfrom=MSDN#detecting-the-type-of-disk
 // Naming a volume:
 // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-volume
+// Partition GUID:
+// https://en.wikipedia.org/wiki/GUID_Partition_Table
 
 #include "WinDisk.h"
 
