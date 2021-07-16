@@ -22,3 +22,18 @@ std::vector<std::wstring> WinDisk::GetValidDrives()
 
     return drives;
 }
+
+std::wstring WinDisk::GetVolumeGuid(const std::wstring& mountPoint)
+{
+    DWORD nBufferLength = MAX_PATH;
+    wchar_t szVolumeName[MAX_PATH] = { 0 };
+
+    // Pass the mount point to GetVolumeNameForVolumeMountPoint to obtain the volume name.
+    if (GetVolumeNameForVolumeMountPoint(mountPoint.c_str(), szVolumeName, nBufferLength))
+    {
+        return std::wstring(szVolumeName);
+    }
+
+    // Return an empty string
+    return std::wstring();
+}

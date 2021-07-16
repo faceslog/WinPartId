@@ -14,6 +14,7 @@ int main()
     for (auto& drive : WinDisk::GetValidDrives())
     {
         std::wcout << drive << std::endl;
+        std::wcout << WinDisk::GetVolumeGuid(drive) << std::endl;
     }
 
     /*
