@@ -1,6 +1,8 @@
 // PartIdentifiers.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// Faceslog
 
+// Detecting the type of disk:
+// https://docs.microsoft.com/en-us/windows/win32/fileio/basic-and-dynamic-disks?redirectedfrom=MSDN#detecting-the-type-of-disk
 // Naming a volume:
 // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-volume
 
@@ -21,7 +23,9 @@ int main()
         std::cout << "Disk Numbers: ";
         for (auto& nb : WinDisk::GetDiskNumbers(vGuid))
         {
-            std::cout << nb << ' ';
+            std::cout << nb << std::endl;
+            WinDisk::PartitionList(nb);
+
         }
         std::cout << std::endl;
     }

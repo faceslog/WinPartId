@@ -31,7 +31,7 @@ std::wstring WinDisk::GetVolumeGuid(const std::wstring& mountPoint)
     // Pass the mount point to GetVolumeNameForVolumeMountPoint to obtain the volume name.
     if (!GetVolumeNameForVolumeMountPoint(mountPoint.c_str(), szVolumeName, nBufferLength))
     {
-        // std::cout << "GetVolumeNameForVolumeMountPoint() Failed: " << GetLastError() << std::endl;
+        // std::wcout << "GetVolumeNameForVolumeMountPoint() Failed: " << GetLastError() << std::endl;
         // Return an empty string
         return std::wstring();
     }
@@ -46,11 +46,11 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
     // Delete the trailing backslash to call CreateFile():
     szVolumeName.pop_back();
 
-    HANDLE hVolume = CreateFile(szVolumeName.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-    if (hVolume == INVALID_HANDLE_VALUE)
+    HANDLE hDevice = CreateFile(szVolumeName.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
     {
-        // std::cout << "CreateFile() Failed: " << GetLastError() << std::endl;
-        CloseHandle(hVolume);
+        // std::wcout << "CreateFile() Failed: " << GetLastError() << std::endl;
+        CloseHandle(hDevice);
         return diskNumbers;
     }
 
@@ -58,14 +58,14 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
     VOLUME_DISK_EXTENTS vde = { 0 };
     DWORD bytesReturned = 0;
 
-    if (!DeviceIoControl(hVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)&vde, sizeof(vde), &bytesReturned, NULL))
+    if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)&vde, sizeof(vde), &bytesReturned, NULL))
     {
         // Check last error if not ERROR_MORE_DATA then return
         int nError = GetLastError();
         if (nError != ERROR_MORE_DATA)
         {
-            // std::cout << "DeviceIoControl() Failed: " << nError << std::endl;
-            CloseHandle(hVolume);
+            // std::wcout << "DeviceIoControl() Failed: " << nError << std::endl;
+            CloseHandle(hDevice);
             return diskNumbers;
         }
 
@@ -73,11 +73,11 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         size_t size = offsetof(VOLUME_DISK_EXTENTS, Extents[vde.NumberOfDiskExtents]);
         std::vector<BYTE> buffer(size);
 
-        if (!DeviceIoControl(hVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
+        if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
         {
             nError = GetLastError();
-            // std::cout << "DeviceIoControl() Failed: " << nError << std::endl;
-            CloseHandle(hVolume);
+            // std::wcout << "DeviceIoControl() Failed: " << nError << std::endl;
+            CloseHandle(hDevice);
             return diskNumbers;
         }
 
@@ -86,14 +86,122 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         vde = *reinterpret_cast<const VOLUME_DISK_EXTENTS*>(buffer.data());
     }
     
-    // std::cout << "NumberOfDiskExtents: " << vde.NumberOfDiskExtents << std::endl;
+    // std::wcout << "NumberOfDiskExtents: " << vde.NumberOfDiskExtents << std::endl;
 
     for (size_t i{ 0 }; i < vde.NumberOfDiskExtents; i++)
     {
         diskNumbers.push_back(vde.Extents[i].DiskNumber);
     } 
 
-    CloseHandle(hVolume);
+    CloseHandle(hDevice);
 
     return diskNumbers;
+}
+
+void WinDisk::PartitionList(DWORD diskNumber)
+{
+    // Use the disk numbers to construct the disk paths, such as "\\?\PhysicalDriveX".
+    std::wstring diskPath = L"\\\\?\\PhysicalDrive" + std::to_wstring(diskNumber);
+    std::wcout << diskPath << std::endl;
+
+    HANDLE hDevice = CreateFile(diskPath.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        std::wcout << "CreateFile() Failed: " << GetLastError() << std::endl;
+        CloseHandle(hDevice);
+        return;
+    }
+
+    DRIVE_LAYOUT_INFORMATION_EX dli;
+    DWORD bytesReturned = 0;
+
+    if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)&dli, sizeof(dli), &bytesReturned, NULL))
+    {
+        // Check last error if not ERROR_INSUFFICIENT_BUFFER then return
+        int nError = GetLastError();
+        if (nError != ERROR_INSUFFICIENT_BUFFER)
+        {
+            std::wcout << "1- DeviceIoControl() Failed: " << nError << std::endl;
+            CloseHandle(hDevice);
+            return;
+        }
+
+        // Allocate enough buffer space based of the value of Partition Count:
+        size_t size = offsetof(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[dli.PartitionCount]);
+        std::vector<BYTE> buffer(size);
+
+        if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
+        {
+            nError = GetLastError();
+            std::wcout << "2- DeviceIoControl() Failed: " << nError << std::endl;
+            CloseHandle(hDevice);
+            return;
+        }
+
+        // At this point we have a fully populated DRIVE_LAYOUT_INFORMATION_EX structure: 
+        dli = *reinterpret_cast<const DRIVE_LAYOUT_INFORMATION_EX*>(buffer.data());
+    }
+
+
+    std::wcout << "Nb of Partitions: " << dli.PartitionCount << std::endl;
+    
+    for (size_t i{ 0 }; i < dli.PartitionCount; i++)
+    {
+        std::wcout << L"Partition " << (i + 1) << " :" << std::endl;
+       
+        switch (dli.PartitionEntry[i].PartitionStyle)
+        {
+        case PARTITION_STYLE_MBR:
+        {
+            std::wcout << "MBR Partition ..." << std::endl;
+            break;
+        }
+        case PARTITION_STYLE_GPT:
+        {
+            std::wcout << "GPT Partition ..." << std::endl;
+            break;
+        }
+        case PARTITION_STYLE_RAW:
+            std::wcout << "RAW Partition ..." << std::endl;
+            break;
+        default:
+            std::wcout << "Invalid Partition ..." << std::endl;
+        }
+       
+
+    }
+        
+
+    /*
+    * switch (dli.PartitionStyle)
+    {
+    case PARTITION_STYLE_MBR:
+    {
+        std::wcout << "MBR Partition ..." << std::endl;
+    }
+    case PARTITION_STYLE_GPT:
+    {
+        std::wcout << "GPT Partition ..." << std::endl;
+
+        for (size_t i{ 0 }; i < dli.PartitionCount; i++)
+        {
+            std::wcout << L"Partition " << (i + 1) << " :" << std::endl;
+            
+            wchar_t* guidString;
+            StringFromCLSID(dli.PartitionEntry[i].Gpt.PartitionType, &guidString);
+            std::wcout << L"Type: " << guidString << std::endl;
+            CoTaskMemFree(guidString);
+
+        }
+        break;
+    }        
+    case PARTITION_STYLE_RAW:
+        std::wcout << "RAW Partition ..." << std::endl;
+        break;
+    default:
+        std::wcout << "Invalid Partition ..." << std::endl;
+    }
+    */
+        
+    CloseHandle(hDevice);
 }
