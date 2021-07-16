@@ -4,7 +4,6 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
-#include <array>
 
 namespace WinDisk
 {

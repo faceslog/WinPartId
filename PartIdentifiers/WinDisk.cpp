@@ -54,7 +54,6 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         return diskNumbers;
     }
 
-    // From: https://stackoverflow.com/questions/33327177/how-to-call-deviceiocontrol-to-retrieve-the-amount-of-memory-it-needs
     VOLUME_DISK_EXTENTS vde = { 0 };
     DWORD bytesReturned = 0;
 
@@ -82,17 +81,22 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         }
 
         // At this point we have a fully populated VOLUME_DISK_EXTENTS structure: 
-        //const VOLUME_DISK_EXTENTS& result = *reinterpret_cast<const VOLUME_DISK_EXTENTS*>(buffer.data());
-        vde = *reinterpret_cast<const VOLUME_DISK_EXTENTS*>(buffer.data());
+        const VOLUME_DISK_EXTENTS& result = *reinterpret_cast<const VOLUME_DISK_EXTENTS*>(buffer.data());
+
+        for (size_t i{ 0 }; i < result.NumberOfDiskExtents; i++)
+        {
+            diskNumbers.push_back(result.Extents[i].DiskNumber);
+        }
+    }
+    else
+    {
+        // Call succeeded; vde is populated with single disk extent.
+        for (size_t i{ 0 }; i < vde.NumberOfDiskExtents; i++)
+        {
+            diskNumbers.push_back(vde.Extents[i].DiskNumber);
+        }
     }
     
-    // std::wcout << "NumberOfDiskExtents: " << vde.NumberOfDiskExtents << std::endl;
-
-    for (size_t i{ 0 }; i < vde.NumberOfDiskExtents; i++)
-    {
-        diskNumbers.push_back(vde.Extents[i].DiskNumber);
-    } 
-
     CloseHandle(hDevice);
 
     return diskNumbers;
@@ -138,70 +142,72 @@ void WinDisk::PartitionList(DWORD diskNumber)
             return;
         }
 
-        // At this point we have a fully populated DRIVE_LAYOUT_INFORMATION_EX structure: 
-        dli = *reinterpret_cast<const DRIVE_LAYOUT_INFORMATION_EX*>(buffer.data());
-    }
-
-
-    std::wcout << "Nb of Partitions: " << dli.PartitionCount << std::endl;
-    
-    for (size_t i{ 0 }; i < dli.PartitionCount; i++)
-    {
-        std::wcout << L"Partition " << (i + 1) << " :" << std::endl;
-       
-        switch (dli.PartitionEntry[i].PartitionStyle)
+        // At this point we have a fully populated DRIVE_LAYOUT_INFORMATION_EX structure:
+        const DRIVE_LAYOUT_INFORMATION_EX& result = *reinterpret_cast<const DRIVE_LAYOUT_INFORMATION_EX*>(buffer.data());
+        std::wcout << "2- Nb of Partitions: " << result.PartitionCount << std::endl;
+        for (size_t i{ 0 }; i < result.PartitionCount; i++)
         {
-        case PARTITION_STYLE_MBR:
-        {
-            std::wcout << "MBR Partition ..." << std::endl;
-            break;
+            std::wcout << L"2- Partition " << (i + 1) << " :" << std::endl;
+
+            switch (result.PartitionEntry[i].PartitionStyle)
+            {
+            case PARTITION_STYLE_MBR:
+            {
+                std::wcout << "2- MBR Partition ..." << std::endl;
+                break;
+            }
+            case PARTITION_STYLE_GPT:
+            {
+                std::wcout << "2- GPT Partition ..." << std::endl;
+                wchar_t* guidString;
+                StringFromCLSID(result.PartitionEntry[i].Gpt.PartitionType, &guidString);
+                std::wcout << L"2- Type: " << guidString << std::endl;
+                CoTaskMemFree(guidString);
+                break;
+            }
+            case PARTITION_STYLE_RAW:
+                std::wcout << "2- RAW Partition ..." << std::endl;
+                break;
+            default:
+                std::wcout << "2- Invalid Partition ..." << std::endl;
+            }
         }
-        case PARTITION_STYLE_GPT:
-        {
-            std::wcout << "GPT Partition ..." << std::endl;
-            break;
-        }
-        case PARTITION_STYLE_RAW:
-            std::wcout << "RAW Partition ..." << std::endl;
-            break;
-        default:
-            std::wcout << "Invalid Partition ..." << std::endl;
-        }
-       
 
     }
-        
-
-    /*
-    * switch (dli.PartitionStyle)
+    else
     {
-    case PARTITION_STYLE_MBR:
-    {
-        std::wcout << "MBR Partition ..." << std::endl;
-    }
-    case PARTITION_STYLE_GPT:
-    {
-        std::wcout << "GPT Partition ..." << std::endl;
+        // Single Result:
+        std::wcout << "Nb of Partitions: " << dli.PartitionCount << std::endl;
 
         for (size_t i{ 0 }; i < dli.PartitionCount; i++)
         {
             std::wcout << L"Partition " << (i + 1) << " :" << std::endl;
-            
-            wchar_t* guidString;
-            StringFromCLSID(dli.PartitionEntry[i].Gpt.PartitionType, &guidString);
-            std::wcout << L"Type: " << guidString << std::endl;
-            CoTaskMemFree(guidString);
 
+            switch (dli.PartitionEntry[i].PartitionStyle)
+            {
+            case PARTITION_STYLE_MBR:
+            {
+                std::wcout << "MBR Partition ..." << std::endl;
+                break;
+            }
+            case PARTITION_STYLE_GPT:
+            {
+                std::wcout << "GPT Partition ..." << std::endl;
+                wchar_t* guidString;
+                StringFromCLSID(dli.PartitionEntry[i].Gpt.PartitionType, &guidString);
+                std::wcout << L"Type: " << guidString << std::endl;
+                CoTaskMemFree(guidString);
+                break;
+            }
+            case PARTITION_STYLE_RAW:
+                std::wcout << "RAW Partition ..." << std::endl;
+                break;
+            default:
+                std::wcout << "Invalid Partition ..." << std::endl;
+            }
         }
-        break;
-    }        
-    case PARTITION_STYLE_RAW:
-        std::wcout << "RAW Partition ..." << std::endl;
-        break;
-    default:
-        std::wcout << "Invalid Partition ..." << std::endl;
-    }
-    */
-        
+
+    }  
+                
     CloseHandle(hDevice);
 }
