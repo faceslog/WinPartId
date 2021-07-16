@@ -13,5 +13,5 @@ namespace WinDisk
 
 	std::vector<DWORD> GetDiskNumbers(std::wstring szVolumeName);
 
-	void PartitionList(DWORD diskNumber);
+	std::vector<PARTITION_INFORMATION_EX> GetPartList(DWORD diskNumber);
 }

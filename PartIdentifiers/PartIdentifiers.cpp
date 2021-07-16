@@ -6,7 +6,6 @@
 // Naming a volume:
 // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-volume
 
-#include <iostream>
 #include "WinDisk.h"
 
 int main()
@@ -24,8 +23,32 @@ int main()
         for (auto& nb : WinDisk::GetDiskNumbers(vGuid))
         {
             std::cout << nb << std::endl;
-            WinDisk::PartitionList(nb);
-
+            
+            for (auto& part : WinDisk::GetPartList(nb))
+            {
+                switch (part.PartitionStyle)
+                {
+                case PARTITION_STYLE_MBR:
+                {
+                    std::wcout << "MBR Partition ..." << std::endl;
+                    break;
+                }
+                case PARTITION_STYLE_GPT:
+                {
+                    std::wcout << "GPT Partition ..." << std::endl;
+                    wchar_t* guidString;
+                    StringFromCLSID(part.Gpt.PartitionType, &guidString);
+                    std::wcout << L"Type: " << guidString << std::endl;
+                    CoTaskMemFree(guidString);
+                    break;
+                }
+                case PARTITION_STYLE_RAW:
+                    std::wcout << "RAW Partition ..." << std::endl;
+                    break;
+                default:
+                    std::wcout << "Invalid Partition ..." << std::endl;
+                }
+            }
         }
         std::cout << std::endl;
     }
