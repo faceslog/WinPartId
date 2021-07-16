@@ -147,7 +147,14 @@
     <ClCompile Include="WinDisk.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="WinDisk.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PartIdentifiers.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\logo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
