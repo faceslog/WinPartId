@@ -194,19 +194,56 @@ void WinDisk::DisplayPartDetail(const PARTITION_INFORMATION_EX& part)
         std::wcout << "Size: : " << (part.PartitionLength.QuadPart / (GB_IN_BYTE)) << "GB" << std::endl;
     }
     
-
     switch (part.PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
         {
+            // https://docs.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-partition_information_mbr
             std::wcout << "Style: MBR" << std::endl;
+            switch (part.Mbr.PartitionType)
+            {
+                case PARTITION_ENTRY_UNUSED:
+                    std::wcout << "Type: ENTRY_UNUSED" << std::endl;
+                    break;
+                case PARTITION_EXTENDED:
+                    std::wcout << "Type: EXTENDED" << std::endl;
+                    break;
+                case PARTITION_FAT_12:
+                    std::wcout << "Type: FAT_12" << std::endl;
+                    break;
+                case PARTITION_FAT_16:
+                    std::wcout << "Type: FAT_16" << std::endl;
+                    break;
+                case PARTITION_FAT32:
+                    std::wcout << "Type: FAT32" << std::endl;
+                    break;
+                case PARTITION_IFS:
+                    std::wcout << "Type: IFS" << std::endl;
+                    break;
+                case PARTITION_LDM:
+                    std::wcout << "Type: LDM" << std::endl;
+                    break;
+                case PARTITION_NTFT:
+                    std::wcout << "Type: NTFT" << std::endl;
+                    break;
+                case VALID_NTFT:
+                    std::wcout << "Type: VALID_NTFT" << std::endl;
+                    break;
+                default:
+                    std::wcout << "Type: Invalid Type" << std::endl;
+            }
+            std::wcout << "BootIndicator: " << (part.Mbr.BootIndicator ? "true" : "false" ) << std::endl;
+            std::wcout << "RecognizedPartition: " << (part.Mbr.RecognizedPartition ? "true" : "false") << std::endl;
+            std::wcout << "Hidden Sectors: " << part.Mbr.HiddenSectors << std::endl;
+            std::wcout << "PartitionId: " << WinDisk::GUIDToWstring(part.Mbr.PartitionId) << std::endl;
             break;
         }
         case PARTITION_STYLE_GPT:
         {
+            // https://docs.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-partition_information_gpt
             std::wcout << "Style: GPT" << std::endl;
             std::wcout << "Type: " << WinDisk::GUIDToWstring(part.Gpt.PartitionType) << std::endl;
-            std::wcout << "ID: " << WinDisk::GUIDToWstring(part.Gpt.PartitionId) << std::endl;  
+            std::wcout << "PartitionId: " << WinDisk::GUIDToWstring(part.Gpt.PartitionId) << std::endl;  
             break;
         }
         case PARTITION_STYLE_RAW:
