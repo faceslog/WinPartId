@@ -12,11 +12,17 @@
 
 int main()
 {
-    
+    std::wcout << std::endl;
+    std::wcout << "Faceslog - Disk Helper" << std::endl;
+    std::wcout << "Email: faces@faceslog.com" << std::endl;
+    std::wcout << "Discord: faceslog#6851" << std::endl;
+    std::wcout << "Github: www.github.com/faceslog" << std::endl;
+    std::wcout << std::endl;
+
     for (auto& drive : WinDisk::GetValidDrives())
     {
         std::wcout << std::endl;
-        std::wcout << "=======================" << std::endl;
+        std::wcout << "=======================================================" << std::endl;
         std::wcout << L"Drive: " << drive << std::endl;
 
         std::wstring vGuid = WinDisk::GetVolumeGuid(drive);
@@ -37,8 +43,12 @@ int main()
             }
 
         }
+        std::wcout << "=======================================================" << std::endl;
         std::wcout << std::endl;
     }
+
+    std::cout << "Press any key to exit this window ..." << std::endl;
+    (void) std::getchar();
 
     return EXIT_SUCCESS;
 }
