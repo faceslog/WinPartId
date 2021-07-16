@@ -12,6 +12,9 @@
 #include <string>
 #include <vector>
 
+#define GB_IN_BYTE 1073741824
+#define MB_IN_BYTE 1048576
+
 namespace WinDisk
 {
 	std::vector<std::wstring> GetValidDrives();
@@ -23,4 +26,6 @@ namespace WinDisk
 	std::vector<PARTITION_INFORMATION_EX> GetPartList(DWORD diskNumber);
 
 	std::wstring GUIDToWstring(const GUID& guid);
+
+	void DisplayPartDetail(const PARTITION_INFORMATION_EX& part);
 }

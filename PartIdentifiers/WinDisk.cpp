@@ -180,3 +180,41 @@ std::wstring WinDisk::GUIDToWstring(const GUID& guid)
 
     return temp;    
 }
+
+void WinDisk::DisplayPartDetail(const PARTITION_INFORMATION_EX& part)
+{
+    // 1 Byte = 9.31E-10 GB
+    // 1GB = 1073741824 Bytes
+    if (part.PartitionLength.QuadPart < GB_IN_BYTE)
+    {
+        std::wcout << "Size: : " << (part.PartitionLength.QuadPart / (MB_IN_BYTE)) << "MB" << std::endl;
+    }
+    else
+    {
+        std::wcout << "Size: : " << (part.PartitionLength.QuadPart / (GB_IN_BYTE)) << "GB" << std::endl;
+    }
+    
+
+    switch (part.PartitionStyle)
+    {
+        case PARTITION_STYLE_MBR:
+        {
+            std::wcout << "Style: MBR" << std::endl;
+            break;
+        }
+        case PARTITION_STYLE_GPT:
+        {
+            std::wcout << "Style: GPT" << std::endl;
+            std::wcout << "Type: " << WinDisk::GUIDToWstring(part.Gpt.PartitionType) << std::endl;
+            std::wcout << "ID: " << WinDisk::GUIDToWstring(part.Gpt.PartitionId) << std::endl;  
+            break;
+        }
+        case PARTITION_STYLE_RAW:
+        {
+            std::wcout << "Style: RAW (Partition not formatted in either of the recognized formats—MBR or GPT)" << std::endl;
+            break;
+        }
+        default:
+            std::wcout << "Style: Invalid Style" << std::endl;
+    }
+}
