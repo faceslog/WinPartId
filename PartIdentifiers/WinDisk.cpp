@@ -187,11 +187,11 @@ void WinDisk::DisplayPartDetail(const PARTITION_INFORMATION_EX& part)
     // 1GB = 1073741824 Bytes
     if (part.PartitionLength.QuadPart < GB_IN_BYTE)
     {
-        std::wcout << "Size: : " << (part.PartitionLength.QuadPart / (MB_IN_BYTE)) << "MB" << std::endl;
+        std::wcout << "Size: " << (part.PartitionLength.QuadPart / (MB_IN_BYTE)) << "MB" << std::endl;
     }
     else
     {
-        std::wcout << "Size: : " << (part.PartitionLength.QuadPart / (GB_IN_BYTE)) << "GB" << std::endl;
+        std::wcout << "Size: " << (part.PartitionLength.QuadPart / (GB_IN_BYTE)) << "GB" << std::endl;
     }
     
     switch (part.PartitionStyle)
