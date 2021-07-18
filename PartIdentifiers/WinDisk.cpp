@@ -72,12 +72,12 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         size_t size = offsetof(VOLUME_DISK_EXTENTS, Extents[vde.NumberOfDiskExtents]);
         
         std::vector<BYTE> buffer;
-        // Try to allocate enough space for the buffer, might fail if running x86 on x64 system
+        // Try to allocate enough space for the buffer, might fail...
         try
         {
             buffer.reserve(size);
         }
-        catch (std::bad_alloc& e)
+        catch (std::exception& e) // catch std::length_error & std::bad_alloc
         {
             // std::wcout << "[A] - GetDiskNumbers() Failed to allocate enough memory ! " << std::endl;
             // std::wcout << "[A] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
@@ -148,11 +148,12 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
         size_t size = offsetof(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[dli.PartitionCount]);
 
         std::vector<BYTE> buffer;
+        // Try to allocate enough space for the buffer, might fail...
         try
         {
             buffer.reserve(size);
         }
-        catch (std::bad_alloc& e)
+        catch (std::exception& e) // catch std::length_error & std::bad_alloc
         {
             // std::wcout << "[B] - GetPartList() Failed to allocate enough memory ! " << std::endl;
             // std::wcout << "[B] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
