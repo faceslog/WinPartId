@@ -70,7 +70,20 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
 
         // Allocate enough buffer space based of the value of NumberOfDiskExtents: 
         size_t size = offsetof(VOLUME_DISK_EXTENTS, Extents[vde.NumberOfDiskExtents]);
-        std::vector<BYTE> buffer(size);
+        
+        std::vector<BYTE> buffer;
+        // Try to allocate enough space for the buffer, might fail if running x86 on x64 system
+        try
+        {
+            buffer.reserve(size);
+        }
+        catch (std::bad_alloc& e)
+        {
+            // std::wcout << "[A] - GetDiskNumbers() Failed to allocate enough memory ! " << std::endl;
+            // std::wcout << "[A] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
+            CloseHandle(hDevice);
+            return diskNumbers;
+        }
 
         if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
         {
@@ -133,7 +146,19 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
 
         // Allocate enough buffer space based of the value of Partition Count:
         size_t size = offsetof(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[dli.PartitionCount]);
-        std::vector<BYTE> buffer(size);
+
+        std::vector<BYTE> buffer;
+        try
+        {
+            buffer.reserve(size);
+        }
+        catch (std::bad_alloc& e)
+        {
+            // std::wcout << "[B] - GetPartList() Failed to allocate enough memory ! " << std::endl;
+            // std::wcout << "[B] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
+            CloseHandle(hDevice);
+            return partitions;
+        }
 
         if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
         {
