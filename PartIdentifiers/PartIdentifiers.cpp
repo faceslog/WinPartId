@@ -90,7 +90,7 @@ int main()
         if (result == drives.size())
             continue;
         // Exit the program
-        if (result == (exit)) 
+        if (result == exit) 
             break;
 
         DisplayDiskInfo(drives.at(result));
