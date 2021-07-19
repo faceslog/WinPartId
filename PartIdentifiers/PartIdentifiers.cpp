@@ -58,14 +58,20 @@ void DisplayDiskInfo(const std::wstring& drive)
 
             auto part = WinDisk::GetPartList(nb);
 
-            for (size_t i{ 0 }; i < part.size(); i++)
+            if (!part.empty())
             {
-                std::wcout << L"-----------------------" << std::endl;
-                std::wcout << L"Partition " << (i + 1) << ':' << std::endl;
-                WinDisk::DisplayPartDetail(part.at(i));
+                for (size_t i{ 0 }; i < part.size(); i++)
+                {
+                    std::wcout << L"-----------------------" << std::endl;
+                    std::wcout << L"Partition " << (i + 1) << ':' << std::endl;
+                    WinDisk::DisplayPartDetail(part.at(i));
 
+                }
             }
-
+            else
+            {
+                std::wcout << "Could not gather data about partitions, are you using the correct version for your platform ?" << std::endl;
+            }
         }
     }
     else
