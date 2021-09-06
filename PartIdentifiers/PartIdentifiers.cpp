@@ -8,7 +8,18 @@
 // Partition GUID:
 // https://en.wikipedia.org/wiki/GUID_Partition_Table
 
+#include <limits>
 #include "WinDisk.h"
+
+
+void CinIgnore() {
+    // Trick to make it work on VLC since windows.h define a macro max()
+#pragma push_macro("max")
+#undef max
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+#pragma pop_macro("max")
+
+}
 
 int DisplayMenu(const std::vector<std::wstring>& drives, int exit)
 {
@@ -32,11 +43,17 @@ int DisplayMenu(const std::vector<std::wstring>& drives, int exit)
     int x;
     do
     {
+        // clear error flags
+        std::cin.clear();
+
+        // ignore rest of line
+        CinIgnore();
+
         std::wcout << "Input: ";
         std::cin >> x;
         std::cout << std::endl;
 
-    } while (x < 0 || x > exit);
+    } while (x < 0 || x > exit || std::cin.fail());
 
     return x;
 }
@@ -89,7 +106,7 @@ int main()
     {
         auto drives = WinDisk::GetValidDrives();
 
-        int exit = drives.size() + 1;
+        int exit = (int)drives.size() + 1;
         auto result = DisplayMenu(drives, exit);
 
         // Refresh the drives list

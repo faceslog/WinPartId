@@ -77,7 +77,7 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
         {
             buffer.reserve(size);
         }
-        catch (std::exception& e) // catch std::length_error & std::bad_alloc
+        catch (std::exception& ) // catch std::length_error & std::bad_alloc
         {
             // std::wcout << "[A] - GetDiskNumbers() Failed to allocate enough memory ! " << std::endl;
             // std::wcout << "[A] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
@@ -85,7 +85,7 @@ std::vector<DWORD> WinDisk::GetDiskNumbers(std::wstring szVolumeName)
             return diskNumbers;
         }
 
-        if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
+        if (!DeviceIoControl(hDevice, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, (void*)buffer.data(), (DWORD)size, &bytesReturned, NULL))
         {
             nError = GetLastError();
             // std::wcout << "[A] DeviceIoControl() Failed: " << nError << std::endl;
@@ -153,7 +153,7 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
         {
             buffer.reserve(size);
         }
-        catch (std::exception& e) // catch std::length_error & std::bad_alloc
+        catch (std::exception&) // catch std::length_error & std::bad_alloc
         {
             // std::wcout << "[B] - GetPartList() Failed to allocate enough memory ! " << std::endl;
             // std::wcout << "[B] - Are you using the x86 version on an x64 system ? Or vice versa ?" << std::endl;
@@ -161,7 +161,7 @@ std::vector<PARTITION_INFORMATION_EX> WinDisk::GetPartList(DWORD diskNumber)
             return partitions;
         }
 
-        if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)buffer.data(), size, &bytesReturned, NULL))
+        if (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, (void*)buffer.data(), (DWORD)size, &bytesReturned, NULL))
         {
             nError = GetLastError();
             // std::wcout << "[B] DeviceIoControl() Failed: " << nError << std::endl;
