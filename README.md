@@ -1,9 +1,9 @@
 # WinPartId
 
-**Users:**
-A simple tool to query data about your drives instead of using `diskpart` !<br/>
-**Developers:**
-Some ready to use functions to query data about your drives to save you some time (`WinDisk.h, WinDisk.cpp`) in **C++**:
+A simple tool to query some data about your drives like `diskpart` !<br/>
+There are also some ready to use functions to query data about your drives to save you some time from reading the whole Windows System API (`WinDisk.h, WinDisk.cpp`) in **C++**:
+
+**Informations Available About a Disk:**
 - **Size**
 - **Volume GUID**
 - **Disk Numbers**
@@ -16,7 +16,7 @@ Some ready to use functions to query data about your drives to save you some tim
 
 ## Why ?
 This project was created with the goal to help some friends and myself to identify partitions in Windows Systems with a lot of drives and partitions.
-Using `diskpart` would have slow us down a lot. I could have done it in another way but it was a good challenge to use the Win API.<br/>
+Using `diskpart` would have slow us down a lot. I could have done it in another way but it was a good challenge to learn how to use the Win API.<br/>
 To Identify a Partition Type you can use the [GUID PARTITION TABLE](https://en.wikipedia.org/wiki/GUID_Partition_Table). (One is avalaible below)
  
 ## License
